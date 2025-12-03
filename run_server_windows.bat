@@ -25,5 +25,5 @@ if not exist "venv\Lib\site-packages\fastapi" (
 :: Run Server
 echo Server is starting at http://localhost:8000
 echo Press Ctrl+C to stop.
-python src/main.py
+python -m src.main
 pause

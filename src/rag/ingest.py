@@ -4,7 +4,7 @@ import logging
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, DirectoryLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import OllamaEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_community.vectorstores import FAISS
 
 # Load Config
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "config", "settings.yaml")
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 def ingest_documents():
     source_path = config["rag"]["document_source_path"]
-    db_path = config["rag"]["chroma_db_path"]
+    db_path = config["rag"]["chroma_db_path"] # We use the same config key for path
     embedding_model_name = config["ollama"]["embedding_model"]
     base_url = config["ollama"]["base_url"]
 
@@ -54,13 +54,23 @@ def ingest_documents():
         model=embedding_model_name
     )
     
-    # Create or Update Vector DB
-    vector_db = Chroma.from_documents(
-        documents=texts,
-        embedding=embeddings,
-        persist_directory=db_path
-    )
-    vector_db.persist()
+    # Create or Update Vector DB (FAISS)
+    if os.path.exists(db_path) and os.path.exists(os.path.join(db_path, "index.faiss")):
+        logger.info("Loading existing FAISS index...")
+        try:
+            vector_db = FAISS.load_local(db_path, embeddings, allow_dangerous_deserialization=True)
+            vector_db.add_documents(texts)
+        except Exception as e:
+            logger.error(f"Error loading FAISS index: {e}. Creating new one.")
+            vector_db = FAISS.from_documents(documents=texts, embedding=embeddings)
+    else:
+        logger.info("Creating new FAISS index...")
+        vector_db = FAISS.from_documents(
+            documents=texts,
+            embedding=embeddings
+        )
+    
+    vector_db.save_local(db_path)
     logger.info(f"Successfully ingested documents into {db_path}")
 
 if __name__ == "__main__":

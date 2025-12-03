@@ -1,7 +1,7 @@
 import os
 import yaml
 import logging
-from langchain_community.vectorstores import Chroma
+from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.llms import Ollama
 from langchain.chains import RetrievalQA
@@ -24,8 +24,13 @@ def query_rag(query: str, model_name: str, top_k: int = 3):
         model=embedding_model_name
     )
     
-    # Load Vector DB
-    vector_db = Chroma(persist_directory=db_path, embedding_function=embeddings)
+    # Load Vector DB (FAISS)
+    try:
+        vector_db = FAISS.load_local(db_path, embeddings, allow_dangerous_deserialization=True)
+    except Exception as e:
+        # Handle case where index doesn't exist yet
+        logger.warning(f"Could not load FAISS index: {e}")
+        return {"result": "No documents ingested yet or index error.", "source_documents": []}
     
     # Initialize LLM
     llm = Ollama(

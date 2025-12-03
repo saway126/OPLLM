@@ -2,7 +2,7 @@ fastapi
 uvicorn
 python-multipart
 requests
-chromadb>=0.4.24
+faiss-cpu
 langchain
 langchain-community
 pydantic
