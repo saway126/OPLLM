@@ -96,3 +96,25 @@ curl -X POST http://localhost:8000/api/rag/query \
 - **로그 확인**: `tail -f logs/server.log`
 - **API 키 변경**: `config/settings.yaml` 파일에서 `api_key`를 변경하고 서버를 재시작하세요.
 - **모델 업데이트**: 새로운 모델 파일을 가져와서 `2.4 모델 로드` 과정을 반복하면 됩니다.
+
+## 6. Docker 기반 오프라인 시뮬레이션
+폐쇄망 환경을 USB 없이 재현하고 싶다면 Docker로 Ollama + API 서버를 동시에 구동할 수 있습니다.
+
+1. **사전 준비**
+   - `offline_pip` 폴더에 필요한 모든 wheel(특히 `langchain==0.2.16`, `langchain-community==0.2.16`)을 넣어둡니다.
+   - 호스트의 모델 캐시(`C:\Users\<계정>\.ollama` 또는 `~/.ollama`)가 최신 상태인지 확인합니다.
+2. **전용 네트워크 생성**
+   ```powershell
+   docker network create airgap --internal
+   ```
+3. **Compose 실행**
+   ```powershell
+   docker compose -f docker-compose.offline.yml up --build
+   ```
+   - `ollama` 서비스는 호스트의 모델 캐시를 `/root/.ollama`로 마운트합니다.
+   - `api` 서비스는 Dockerfile을 이용해 오프라인 패키지로 이미지를 빌드합니다.
+4. **테스트**
+   - `curl http://localhost:8000/health`
+   - `Invoke-RestMethod -Uri "http://localhost:8000/api/chat" ...`
+
+`docker-compose.offline.yml`에 정의된 `airgap` 네트워크는 외부 인터넷으로 라우팅되지 않기 때문에, 완전히 분리된 환경에서 통신 흐름을 검증할 수 있습니다. 필요 시 `USE_OFFLINE_PIP=false`로 빌드하면 온라인 설치도 지원합니다.

@@ -1,0 +1,35 @@
+version: "3.9"
+
+networks:
+  airgap:
+    internal: true
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama-offline
+    restart: unless-stopped
+    networks:
+      - airgap
+    ports:
+      - "11434:11434"
+    volumes:
+      - ${USERPROFILE}/.ollama:/root/.ollama
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USE_OFFLINE_PIP: "true"
+    container_name: llm-server-offline
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_BASE_URL=http://ollama-offline:11434
+      - PYTHONPATH=/app
+    networks:
+      - airgap
+    ports:
+      - "8000:8000"
+

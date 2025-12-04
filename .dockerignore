@@ -1,0 +1,13 @@
+venv
+__pycache__
+.git
+.gitignore
+logs
+data/chroma_db
+*.pyc
+*.pyo
+*.pyd
+*.log
+.DS_Store
+node_modules
+

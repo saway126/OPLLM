@@ -38,7 +38,7 @@ class RAGQueryRequest(BaseModel):
     top_k: int = 3
 
 # Ollama Client Helper
-OLLAMA_BASE = config["ollama"]["base_url"]
+OLLAMA_BASE = os.environ.get("OLLAMA_BASE_URL", config["ollama"]["base_url"])
 
 def call_ollama(endpoint: str, payload: Dict[str, Any], stream: bool = False):
     try:

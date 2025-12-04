@@ -26,9 +26,8 @@ $chatPayload = @{
 } | ConvertTo-Json -Depth 3
 
 try {
-    $response = Invoke-RestMethod -Uri "$BaseUrl/api/chat" -Method Post -Body $chatPayload -ContentType "application/json" -Headers @{ "X-API-Key" = $ApiKey }
+    Invoke-RestMethod -Uri "$BaseUrl/api/chat" -Method Post -Body $chatPayload -ContentType "application/json" -Headers @{ "X-API-Key" = $ApiKey } | Out-Null
     Write-Host "PASS: Chat API responded." -ForegroundColor Green
-    # Write-Host $response
 } catch {
     Write-Host "WARNING: Chat API failed. This is expected if Ollama is not installed or 'llama3' model is missing." -ForegroundColor Yellow
     Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Gray
@@ -42,7 +41,7 @@ $ragPayload = @{
 } | ConvertTo-Json
 
 try {
-    $response = Invoke-RestMethod -Uri "$BaseUrl/api/rag/query" -Method Post -Body $ragPayload -ContentType "application/json" -Headers @{ "X-API-Key" = $ApiKey }
+    Invoke-RestMethod -Uri "$BaseUrl/api/rag/query" -Method Post -Body $ragPayload -ContentType "application/json" -Headers @{ "X-API-Key" = $ApiKey } | Out-Null
     Write-Host "PASS: RAG API responded." -ForegroundColor Green
 } catch {
     Write-Host "WARNING: RAG API failed. (Expected if Ollama/ChromaDB is not ready)" -ForegroundColor Yellow
